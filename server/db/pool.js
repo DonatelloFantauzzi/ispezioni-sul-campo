@@ -1,0 +1,12 @@
+import pg from "pg";
+import dotenv from "dotenv";
+
+const { Pool } = pg;
+
+dotenv.config();
+const connectionString = process.env.DATABASE_URL;
+console.log(connectionString);
+
+const pool = new Pool({ connectionString });
+
+export default pool;

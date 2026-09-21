@@ -1,0 +1,38 @@
+CREATE TABLE assets(
+id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+nome TEXT NOT NULL,
+geom GEOGRAPHY(POINT, 4326) NOT NULL,
+indirizzo TEXT,
+tipologia TEXT CHECK(tipologia IN ('cabina','traliccio','contatore')) NOT NULL
+);
+
+
+CREATE TABLE utenti(
+id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+nome TEXT NOT NULL,
+password_hash TEXT NOT NULL,
+ruolo TEXT NOT NULL CHECK(ruolo IN('operatore','supervisore')),
+email TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE ispezioni(
+id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+utente_id BIGINT REFERENCES utenti(id) ON DELETE SET NULL, 
+asset_id BIGINT NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+esito TEXT NOT NULL CHECK(esito IN('conforme','non_conforme','conforme_con_riserva')),
+note TEXT,
+data TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE difetti(
+id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+ispezione_id BIGINT NOT NULL REFERENCES ispezioni(id) ON DELETE CASCADE,
+descrizione TEXT,
+severita TEXT NOT NULL CHECK(severita IN('lieve','media','grave'))
+);
+
+CREATE TABLE foto(
+id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+difetto_id BIGINT NOT NULL REFERENCES difetti(id) ON DELETE CASCADE,
+url TEXT NOT NULL
+);
