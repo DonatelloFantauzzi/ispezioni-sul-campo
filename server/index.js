@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./db/pool.js";
+import routerAssets from "./routes/assets.js";
 
 const PORT = 3000;
 dotenv.config();
@@ -10,6 +11,8 @@ const app = express();
 app.use(express.json());
 
 app.use(cors());
+
+app.use("/api/assets", routerAssets);
 
 app.get("/api/health", async (req, res) => {
   try {
