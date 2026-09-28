@@ -20,15 +20,24 @@ export default function Mappa({ assets, caricamento, coordinate }) {
       <MapContainer center={[41.9, 12.5]} zoom={12} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <CentraMappa coordinate={coordinate} />
         {assets.map((asset) => {
           return (
             <Marker key={asset.id} position={[asset.lat, asset.lng]}>
               <Popup>
-                <p>{asset.nome}</p>
-                <p>{asset.indirizzo}</p>
+                <div className="min-w-44 space-y-1">
+                  <span className="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                    {asset.tipologia}
+                  </span>
+                  <div className="text-sm font-semibold text-slate-900">
+                    {asset.nome}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {asset.indirizzo}
+                  </div>
+                </div>
               </Popup>
             </Marker>
           );

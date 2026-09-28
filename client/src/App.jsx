@@ -24,7 +24,7 @@ export default function App() {
       setCaricamento(true);
       setErrore(null);
       const risposta = await fetch(
-        `http://localhost:3000/api/assets?lat=${lat}&lng=${lng}&raggio=1000`,
+        `http://localhost:3000/api/assets?lat=${lat}&lng=${lng}&raggio=10000`,
       );
       if (!risposta.ok) {
         throw new Error("qualcosa è andato storto nel caricamento");
@@ -59,6 +59,18 @@ export default function App() {
       <h1 className="text-3xl font-bold text-blue-600 p-8">
         Ispezioni sul campo
       </h1>
+      {coordinate && coordinate.stimata && (
+        <div
+          role="status"
+          className="flex items-start gap-2 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900"
+        >
+          <span aria-hidden="true">⚠️</span>
+          <span>
+            Non riusciamo a rilevare la tua posizione. Stiamo mostrando gli
+            asset intorno al centro di Roma.
+          </span>
+        </div>
+      )}
       {errore && (
         <div
           role="alert"
@@ -71,7 +83,7 @@ export default function App() {
           <button
             type="button"
             className="cursor-pointer shrink-0 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
-            onClick={getAssets}
+            onClick={() => getAssets(coordinate.lat, coordinate.lng)}
           >
             Riprova
           </button>
