@@ -8,30 +8,42 @@ const utenti = [
     email: "mario.rossi@example.com",
     password: "Password123!",
     ruolo: "operatore",
+    idMunicipio: 0,
   },
   {
     nome: "Giulia Bianchi",
     email: "giulia.bianchi@example.com",
     password: "SecurePass456!",
     ruolo: "operatore",
+    idMunicipio: 1,
   },
   {
     nome: "Luca Verdi",
     email: "luca.verdi@example.com",
     password: "SuperSegreta789!",
     ruolo: "supervisore",
+    idMunicipio: 0,
   },
   {
     nome: "Sara Neri",
     email: "sara.neri@example.com",
     password: "Qwerty2026!",
     ruolo: "operatore",
+    idMunicipio: 2,
   },
   {
     nome: "Marco Gialli",
     email: "marco.gialli@example.com",
     password: "AdminPass999!",
     ruolo: "supervisore",
+    idMunicipio: 1,
+  },
+  {
+    nome: "Elena Russo",
+    email: "elena.russo@example.com",
+    password: "Municipio3Pass!",
+    ruolo: "supervisore",
+    idMunicipio: 2,
   },
 ];
 
@@ -62,24 +74,35 @@ const difettiMediGravi = ["media", "grave"];
 
 const seed = async () => {
   await pool.query("TRUNCATE assets,utenti RESTART IDENTITY CASCADE");
+  const municipi = (await pool.query("SELECT nome,id FROM zone ORDER BY id"))
+    .rows;
   for (let i = 0; i < 100; i++) {
     const tipologia = tipologiaAsset[Math.floor(Math.random() * 3)];
     const lng = Math.random() * 0.2 + 12.4;
     const lat = Math.random() * 0.2 + 41.8;
+    let zonaId;
+    if (lat >= 41.8 && lat <= 41.8667) {
+      zonaId = municipi[2].id;
+    } else if (lat > 41.8667 && lat <= 41.9333) {
+      zonaId = municipi[1].id;
+    } else {
+      zonaId = municipi[0].id;
+    }
     const nome = `${tipologia}-${i}`;
     await pool.query(
-      `INSERT INTO assets(nome,geom,indirizzo,tipologia) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326) , 'Via del corso', $4)`,
-      [nome, lng, lat, tipologia],
+      `INSERT INTO assets(nome,geom,indirizzo,tipologia,zona_id) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326) , 'Via del corso', $4,$5)`,
+      [nome, lng, lat, tipologia, zonaId],
     );
   }
 
   for (let i = 0; i < utenti.length; i++) {
-    const { nome, ruolo, email, password } = utenti[i];
+    const { nome, ruolo, email, password, idMunicipio } = utenti[i];
     const hashata = await bcrypt.hash(password, 10);
+    const zonaId = municipi[idMunicipio].id;
 
     await pool.query(
-      "INSERT INTO utenti(nome,password_hash,ruolo,email) VALUES ($1,$2,$3,$4)",
-      [nome, hashata, ruolo, email],
+      "INSERT INTO utenti(nome,password_hash,ruolo,email,zona_id) VALUES ($1,$2,$3,$4,$5)",
+      [nome, hashata, ruolo, email, zonaId],
     );
   }
 
@@ -122,18 +145,38 @@ const seed = async () => {
         const difettiLieviMediRandom =
           difettiLieviMedi[Math.floor(Math.random() * difettiLieviMedi.length)];
 
-        await pool.query(
-          "INSERT INTO difetti(ispezione_id,descrizione,severita) VALUES($1,$2,$3)",
+        const risultatoDifetto = await pool.query(
+          "INSERT INTO difetti(ispezione_id,descrizione,severita) VALUES($1,$2,$3) RETURNING id",
           [ispezioneId, descrizioneDifettiRandom, difettiLieviMediRandom],
         );
+
+        const difettoID = risultatoDifetto.rows[0].id;
+        const numeroFoto = Math.floor(Math.random() * 2) + 1;
+        for (let j = 0; j < numeroFoto; j++) {
+          const urlFoto = `https://picsum.photos/seed/${difettoID}-${j}/640/480`;
+          await pool.query(`INSERT INTO foto(difetto_id,url) VALUES($1,$2)`, [
+            difettoID,
+            urlFoto,
+          ]);
+        }
       } else {
         const difettiMediGraviRandom =
           difettiMediGravi[Math.floor(Math.random() * difettiMediGravi.length)];
 
-        await pool.query(
-          "INSERT INTO difetti(ispezione_id,descrizione,severita) VALUES($1,$2,$3)",
+        const risultatoDifetto = await pool.query(
+          "INSERT INTO difetti(ispezione_id,descrizione,severita) VALUES($1,$2,$3) RETURNING id",
           [ispezioneId, descrizioneDifettiRandom, difettiMediGraviRandom],
         );
+
+        const difettoID = risultatoDifetto.rows[0].id;
+        const numeroFoto = Math.floor(Math.random() * 2) + 1;
+        for (let j = 0; j < numeroFoto; j++) {
+          const urlFoto = `https://picsum.photos/seed/${difettoID}-${j}/640/480`;
+          await pool.query(`INSERT INTO foto(difetto_id,url) VALUES($1,$2)`, [
+            difettoID,
+            urlFoto,
+          ]);
+        }
       }
     }
   }
