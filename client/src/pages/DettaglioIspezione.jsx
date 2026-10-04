@@ -37,6 +37,9 @@ export default function DettaglioIspezione() {
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(null);
   const [nonTrovata, setNonTrovata] = useState(false);
+
+  const [erroreValidazione, setErroreValidazione] = useState(null);
+  const [invioInCorso, setInvioInCorso] = useState(false);
   const params = useParams();
   const id = params.id;
 
@@ -65,10 +68,35 @@ export default function DettaglioIspezione() {
     }
   };
 
+  const modificaValidazione = async (validazione) => {
+    setInvioInCorso(true);
+    setErroreValidazione(null);
+    try {
+      const risposta = await fetch(
+        `http://localhost:3000/api/ispezioni/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-type": "application/json" },
+          body: JSON.stringify({ validazione: `${validazione}` }),
+        },
+      );
+      if (!risposta.ok) {
+        throw new Error("Errore nella validazione");
+      }
+      const dati = await risposta.json();
+      setIspezione({ ...ispezione, validazione: dati.validazione });
+    } catch (error) {
+      console.error(error);
+      setErroreValidazione(error.message);
+    } finally {
+      setInvioInCorso(false);
+    }
+  };
+
   useEffect(() => {
     getIspezione();
   }, [id]);
-  console.log(ispezione);
+
   if (caricamento) {
     return (
       <main className="mx-auto max-w-4xl p-8">
@@ -253,6 +281,51 @@ export default function DettaglioIspezione() {
           </ul>
         )}
       </section>
+      {ispezione.validazione === "in_sospeso" && (
+        <section
+          className="mt-8 border-t border-slate-200 pt-6"
+          aria-labelledby="titolo-validazione"
+        >
+          <h2
+            id="titolo-validazione"
+            className="text-lg font-semibold text-slate-900"
+          >
+            Validazione
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            La decisione è definitiva: una volta confermata non si può
+            modificare.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button
+              disabled={invioInCorso}
+              type="button"
+              className="cursor-pointer rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white enabled:hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => modificaValidazione("accettata")}
+            >
+              Accetta
+            </button>
+            <button
+              disabled={invioInCorso}
+              type="button"
+              className="cursor-pointer rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 enabled:hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => modificaValidazione("rifiutata")}
+            >
+              Rifiuta
+            </button>
+          </div>
+
+          {erroreValidazione && (
+            <p
+              role="alert"
+              className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            >
+              Non siamo riusciti a salvare la decisione. Riprova.
+            </p>
+          )}
+        </section>
+      )}
     </main>
   );
 }
