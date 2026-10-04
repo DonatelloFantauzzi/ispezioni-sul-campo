@@ -90,4 +90,39 @@ WHERE ispezioni.id=$1`,
   }
 });
 
+routerIspezioni.patch("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const statoValidazione = req.body.validazione;
+  try {
+    if (!id || !Number.isInteger(id)) {
+      return res
+        .status(400)
+        .json({ messaggio: "Parametro mancante o non valido" });
+    }
+
+    if (
+      !statoValidazione ||
+      (statoValidazione !== "accettata" && statoValidazione !== "rifiutata")
+    ) {
+      return res.status(400).json({ messaggio: "Decisione inesistente" });
+    }
+
+    const risultato = await pool.query(
+      `UPDATE ispezioni SET validazione=$1 WHERE id=$2 AND validazione= 'in_sospeso' RETURNING validazione`,
+      [statoValidazione, id],
+    );
+
+    if (risultato.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ messaggio: "Ispezione non trovata o già validata" });
+    }
+
+    return res.status(200).json({ validazione: risultato.rows[0].validazione });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ messaggio: "Qualcosa è andato storto" });
+  }
+});
+
 export default routerIspezioni;
