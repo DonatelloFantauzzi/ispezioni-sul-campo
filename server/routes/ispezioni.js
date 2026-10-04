@@ -13,7 +13,7 @@ routerIspezioni.get("/", async (req, res) => {
         .json({ messaggio: "Zona mancante o non corretta" });
     }
     const risposta = await pool.query(
-      `SELECT ispezioni.id, ispezioni.data,ispezioni.esito,assets.nome AS nome_asset,assets.tipologia,assets.indirizzo,zone.nome AS nome_zona,utenti.nome AS nome_utente,ispezioni.validazione
+      `SELECT ispezioni.id, ispezioni.data,ispezioni.esito,assets.nome AS nome_asset,assets.tipologia,assets.indirizzo,zone.nome AS nome_zona,utenti.nome AS nome_utente,ispezioni.validazione,ispezioni.utente_id
 FROM ispezioni
 JOIN assets ON ispezioni.asset_id=assets.id
 JOIN utenti ON ispezioni.utente_id=utenti.id
