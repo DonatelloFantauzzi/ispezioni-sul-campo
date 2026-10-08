@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import {
+  esitoIspezioni,
+  classiStileEsito,
+  validazioneIspezioni,
+} from "../costanti/esiti";
 
 const zonaProvvisoria = 1;
 
@@ -11,25 +16,7 @@ const filtriIniziali = {
   dataAl: "",
 };
 
-const classiStileEsito = {
-  conforme: "bg-green-50 text-green-800 ring-green-200",
-  conforme_con_riserva: "bg-amber-50 text-amber-900 ring-amber-200",
-  non_conforme: "bg-red-50 text-red-800 ring-red-200",
-};
-
-const esitoIspezioni = {
-  conforme: "Conforme",
-  conforme_con_riserva: "Conforme con riserva",
-  non_conforme: "Non conforme",
-};
-
-const validazioneIspezioni = {
-  in_sospeso: "In sospeso",
-  accettata: "Accettata",
-  rifiutata: "Rifiutata",
-};
-
-export default function Supervisore() {
+export default function SupervisoreRegistro() {
   const [ispezioni, setIspezioni] = useState([]);
   const [errore, setErrore] = useState(null);
   const [caricamento, setCaricamento] = useState(true);
