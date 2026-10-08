@@ -58,3 +58,9 @@ JOIN assets ON ispezioni.asset_id=assets.id
 JOIN utenti ON ispezioni.utente_id=utenti.id
 JOIN zone ON assets.zona_id=zone.id
 ORDER BY ispezioni.data DESC;
+
+SELECT DISTINCT ON(assets.id) assets.id AS id_asset, assets.nome, ispezioni.id AS id_ispezione, ispezioni.data,ispezioni.esito
+FROM assets
+LEFT JOIN ispezioni ON assets.id=ispezioni.asset_id
+WHERE assets.zona_id=1
+ORDER BY assets.id, ispezioni.data DESC;
