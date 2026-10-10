@@ -21,3 +21,9 @@ export const classiPalliniEsito = {
   conforme_con_riserva: " bg-amber-400",
   non_conforme: "bg-red-500",
 };
+
+export const prioritaEsiti = {
+  non_conforme: 0,
+  conforme_con_riserva: 1,
+  conforme: 2,
+};
