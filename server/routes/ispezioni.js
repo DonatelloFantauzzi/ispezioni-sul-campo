@@ -31,6 +31,27 @@ ORDER BY ispezioni.data DESC`,
   }
 });
 
+routerIspezioni.get("/stato-asset", async (req, res) => {
+  const zona = Number(req.query.zona);
+  try {
+    if (!zona || !Number.isInteger(zona)) {
+      return res.status(400).json({ messaggio: "Zona mancante o non valida" });
+    }
+    const risposta = await pool.query(
+      `SELECT DISTINCT ON(assets.id) assets.id AS id_asset, assets.nome, ispezioni.id AS id_ispezione, ispezioni.data,ispezioni.esito
+FROM assets
+LEFT JOIN ispezioni ON assets.id=ispezioni.asset_id
+WHERE assets.zona_id=$1
+ORDER BY assets.id, ispezioni.data DESC;`,
+      [zona],
+    );
+    return res.status(200).json({ statoAsset: risposta.rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ messaggio: "C'è stato un errore imprevisto" });
+  }
+});
+
 routerIspezioni.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
