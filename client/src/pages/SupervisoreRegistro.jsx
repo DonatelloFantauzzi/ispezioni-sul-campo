@@ -74,35 +74,7 @@ export default function SupervisoreRegistro() {
   });
 
   return (
-    <main className="mx-auto max-w-6xl p-8">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Dashboard supervisore
-      </h1>
-
-      <div
-        role="tablist"
-        aria-label="Sezioni della dashboard"
-        className="mt-6 flex gap-2 border-b border-slate-200"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected="false"
-          className="-mb-px border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700"
-        >
-          Da gestire
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected="true"
-          className="-mb-px border-b-2 border-blue-600 px-4 py-2 text-sm font-medium text-blue-600"
-        >
-          Registro ispezioni
-        </button>
-      </div>
-
-      {/* Barra dei filtri: compare solo quando ci sono ispezioni da filtrare */}
+    <>
       <div className="mt-6 grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label
@@ -357,6 +329,6 @@ export default function SupervisoreRegistro() {
           </table>
         </div>
       )}
-    </main>
+    </>
   );
 }
