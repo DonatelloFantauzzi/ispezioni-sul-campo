@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/login", routerLogin);
-app.use("/api/assets", routerAssets);
+app.use("/api/assets", controlloToken, routerAssets);
 app.use("/api/ispezioni", controlloToken, routerIspezioni);
 
 app.get("/api/health", async (req, res) => {
