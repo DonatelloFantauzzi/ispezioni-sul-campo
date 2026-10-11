@@ -4,8 +4,10 @@ import SupervisoreRegistro from "./pages/SupervisoreRegistro";
 import SupervisoreDaGestire from "./pages/SupervisoreDaGestire";
 import DettaglioIspezione from "./pages/DettaglioIspezione";
 import LayoutSupervisore from "./layouts/LayoutSupervisore";
+import Login from "./pages/Login";
 
 const router = createBrowserRouter([
+  { path: "/login", element: <Login /> },
   { path: "/", element: <Navigate to="/operatore" replace /> },
   { path: "/operatore", element: <Operatore /> },
   {
