@@ -26,7 +26,13 @@ export default function DettaglioIspezione() {
     setErrore(null);
     setNonTrovata(false);
     try {
-      const risposta = await fetch(`http://localhost:3000/api/ispezioni/${id}`);
+      const token = localStorage.getItem("token");
+      const risposta = await fetch(
+        `http://localhost:3000/api/ispezioni/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (!risposta.ok) {
         if (risposta.status === 404 || risposta.status === 400) {
           setNonTrovata(true);
@@ -49,11 +55,15 @@ export default function DettaglioIspezione() {
     setInvioInCorso(true);
     setErroreValidazione(null);
     try {
+      const token = localStorage.getItem("token");
       const risposta = await fetch(
         `http://localhost:3000/api/ispezioni/${id}`,
         {
           method: "PATCH",
-          headers: { "Content-type": "application/json" },
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ validazione: `${validazione}` }),
         },
       );

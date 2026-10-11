@@ -23,8 +23,12 @@ export default function Operatore() {
     try {
       setCaricamento(true);
       setErrore(null);
+      const token = localStorage.getItem("token");
       const risposta = await fetch(
         `http://localhost:3000/api/assets?lat=${lat}&lng=${lng}&raggio=10000`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
       if (!risposta.ok) {
         throw new Error("qualcosa è andato storto nel caricamento");

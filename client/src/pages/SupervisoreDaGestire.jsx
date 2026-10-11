@@ -18,8 +18,12 @@ export default function SupervisoreDaGestire() {
     try {
       setCaricamento(true);
       setErrore(null);
+      const token = localStorage.getItem("token");
       const risposta = await fetch(
         `http://localhost:3000/api/ispezioni/stato-asset?zona=${zonaMunicipio}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
       if (!risposta.ok) {
         throw new Error(

@@ -6,8 +6,6 @@ import {
   validazioneIspezioni,
 } from "../costanti/esiti";
 
-const zonaProvvisoria = 1;
-
 const filtriIniziali = {
   esito: "",
   operatore: "",
@@ -32,9 +30,12 @@ export default function SupervisoreRegistro() {
 
   const getIspezioni = async () => {
     try {
-      const risposta = await fetch(
-        `http://localhost:3000/api/ispezioni?zona=${zonaProvvisoria}`,
-      );
+      setCaricamento(true);
+      setErrore(null);
+      const token = localStorage.getItem("token");
+      const risposta = await fetch(`http://localhost:3000/api/ispezioni`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!risposta.ok) {
         throw new Error("qualcosa è andato storto durante il caricamento");
       }
@@ -224,8 +225,6 @@ export default function SupervisoreRegistro() {
           <button
             onClick={() => {
               getIspezioni();
-              setCaricamento(true);
-              setErrore(null);
             }}
             type="button"
             className="shrink-0 cursor-pointer rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
