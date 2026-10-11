@@ -4,10 +4,9 @@ import pool from "../db/pool.js";
 const routerIspezioni = express.Router();
 
 routerIspezioni.get("/", async (req, res) => {
-  const zona = req.query.zona;
-  const zonaNumber = Number(zona);
+  const zona = Number(req.utente.zona);
   try {
-    if (!zona || !Number.isInteger(zonaNumber)) {
+    if (!zona || !Number.isInteger(zona)) {
       return res
         .status(400)
         .json({ messaggio: "Zona mancante o non corretta" });
@@ -32,7 +31,7 @@ ORDER BY ispezioni.data DESC`,
 });
 
 routerIspezioni.get("/stato-asset", async (req, res) => {
-  const zona = Number(req.query.zona);
+  const zona = Number(req.utente.zona);
   try {
     if (!zona || !Number.isInteger(zona)) {
       return res.status(400).json({ messaggio: "Zona mancante o non valida" });
