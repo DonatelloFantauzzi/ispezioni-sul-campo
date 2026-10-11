@@ -27,3 +27,15 @@ export const prioritaEsiti = {
   conforme_con_riserva: 1,
   conforme: 2,
 };
+
+export const classiStiliSeverita = {
+  lieve: "bg-slate-100 text-slate-700 ring-slate-200",
+  media: "bg-amber-50 text-amber-900 ring-amber-200",
+  grave: "bg-red-50 text-red-800 ring-red-200",
+};
+
+export const etichettaSeverita = {
+  lieve: "Lieve",
+  media: "Media",
+  grave: "Grave",
+};

@@ -1,36 +1,13 @@
 import { useEffect } from "react";
 import { useState } from "react";
+import {
+  classiStileEsito,
+  esitoIspezioni,
+  validazioneIspezioni,
+  classiStiliSeverita,
+  etichettaSeverita,
+} from "../costanti/esiti.js";
 import { Link, useParams } from "react-router";
-
-const classiStileEsito = {
-  conforme: "bg-green-50 text-green-800 ring-green-200",
-  conforme_con_riserva: "bg-amber-50 text-amber-900 ring-amber-200",
-  non_conforme: "bg-red-50 text-red-800 ring-red-200",
-};
-
-const etichetteEsito = {
-  conforme: "Conforme",
-  conforme_con_riserva: "Conforme con riserva",
-  non_conforme: "Non conforme",
-};
-
-const etichetteValidazione = {
-  in_sospeso: "In sospeso",
-  accettata: "Accettata",
-  rifiutata: "Rifiutata",
-};
-
-const classiStiliSeverita = {
-  lieve: "bg-slate-100 text-slate-700 ring-slate-200",
-  media: "bg-amber-50 text-amber-900 ring-amber-200",
-  grave: "bg-red-50 text-red-800 ring-red-200",
-};
-
-const etichettaSeverita = {
-  lieve: "Lieve",
-  media: "Media",
-  grave: "Grave",
-};
 
 export default function DettaglioIspezione() {
   const [ispezione, setIspezione] = useState(null);
@@ -181,10 +158,10 @@ export default function DettaglioIspezione() {
           <span
             className={`inline-block whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${classiStileEsito[ispezione.esito]}`}
           >
-            {etichetteEsito[ispezione.esito]}
+            {esitoIspezioni[ispezione.esito]}
           </span>
           <span className="inline-block rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs text-slate-600">
-            {etichetteValidazione[ispezione.validazione]}
+            {validazioneIspezioni[ispezione.validazione]}
           </span>
         </div>
       </header>
