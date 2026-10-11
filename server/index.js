@@ -5,6 +5,7 @@ import pool from "./db/pool.js";
 import routerAssets from "./routes/assets.js";
 import routerIspezioni from "./routes/ispezioni.js";
 import routerLogin from "./routes/login.js";
+import controlloToken from "./middleware/controlloToken.js";
 
 const PORT = 3000;
 dotenv.config();
@@ -16,7 +17,7 @@ app.use(cors());
 
 app.use("/api/login", routerLogin);
 app.use("/api/assets", routerAssets);
-app.use("/api/ispezioni", routerIspezioni);
+app.use("/api/ispezioni", controlloToken, routerIspezioni);
 
 app.get("/api/health", async (req, res) => {
   try {
