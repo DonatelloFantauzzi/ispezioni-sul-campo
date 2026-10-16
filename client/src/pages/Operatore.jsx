@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useGetDati from "../hooks/useGetDati";
 import Mappa from "../components/Mappa";
 
 const posizioneFallback = {
@@ -14,45 +15,26 @@ const options = {
 };
 
 export default function Operatore() {
-  const [assets, setAssets] = useState([]);
-  const [caricamento, setCaricamento] = useState(true);
-  const [errore, setErrore] = useState(null);
   const [coordinate, setCoordinate] = useState(null);
 
-  const getAssets = async (lat, lng) => {
-    try {
-      setCaricamento(true);
-      setErrore(null);
-      const token = localStorage.getItem("token");
-      const risposta = await fetch(
-        `http://localhost:3000/api/assets?lat=${lat}&lng=${lng}&raggio=10000`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!risposta.ok) {
-        throw new Error("qualcosa è andato storto nel caricamento");
-      }
-      const data = await risposta.json();
-      setAssets(data.assets);
-    } catch (error) {
-      console.error(error);
-      setErrore(error.message);
-    } finally {
-      setCaricamento(false);
-    }
-  };
+  const url = coordinate
+    ? `http://localhost:3000/api/assets?lat=${coordinate.lat}&lng=${coordinate.lng}&raggio=10000`
+    : null;
+
+  const { dati, caricamento, errore, getDati } = useGetDati(url, {
+    assets: [],
+  });
+
+  const { assets } = dati;
 
   const successo = (position) => {
     const { latitude, longitude } = position.coords;
     setCoordinate({ lat: latitude, lng: longitude, stimata: false });
-    getAssets(latitude, longitude);
   };
 
   const fallimento = (error) => {
     console.error(error.code, error.message);
     setCoordinate(posizioneFallback);
-    getAssets(posizioneFallback.lat, posizioneFallback.lng);
   };
 
   useEffect(() => {
@@ -87,7 +69,7 @@ export default function Operatore() {
           <button
             type="button"
             className="cursor-pointer shrink-0 rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
-            onClick={() => getAssets(coordinate.lat, coordinate.lng)}
+            onClick={() => getDati(coordinate.lat, coordinate.lng)}
           >
             Riprova
           </button>

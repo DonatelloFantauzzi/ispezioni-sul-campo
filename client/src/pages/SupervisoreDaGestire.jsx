@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import useGetDati from "../hooks/useGetDati";
+
 import {
   esitoIspezioni,
   classiStileEsito,
@@ -7,49 +8,19 @@ import {
 } from "../costanti/esiti";
 import { Link } from "react-router";
 
-const zonaMunicipio = 1;
-
 export default function SupervisoreDaGestire() {
-  const [statoAsset, setStatoAsset] = useState([]);
-  const [caricamento, setCaricamento] = useState(true);
-  const [errore, setErrore] = useState(null);
+  const { dati, caricamento, errore } = useGetDati(
+    `http://localhost:3000/api/ispezioni/stato-asset`,
+    { statoAsset: [] },
+  );
 
-  const getStatoAsset = async () => {
-    try {
-      setCaricamento(true);
-      setErrore(null);
-      const token = localStorage.getItem("token");
-      const risposta = await fetch(
-        `http://localhost:3000/api/ispezioni/stato-asset?zona=${zonaMunicipio}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!risposta.ok) {
-        throw new Error(
-          "Qualcosa è andato storto durante il caricamento dei dati",
-        );
-      }
-      const dati = await risposta.json();
-      setStatoAsset(dati.statoAsset);
-    } catch (error) {
-      console.error(error);
-      setErrore(error.message);
-    } finally {
-      setCaricamento(false);
-    }
-  };
-
-  useEffect(() => {
-    getStatoAsset();
-  }, []);
+  const { statoAsset } = dati;
 
   const statoAssetSorted = [...statoAsset].sort((a, b) => {
     const prioritaA = a.id_ispezione ? prioritaEsiti[a.esito] : 3;
     const prioritaB = b.id_ispezione ? prioritaEsiti[b.esito] : 3;
     return prioritaA - prioritaB;
   });
-  console.log(statoAssetSorted);
   return (
     <>
       <header className="mt-6 mb-6">

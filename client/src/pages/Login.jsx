@@ -33,7 +33,7 @@ export default function Login() {
       }
       setLocalStorage(dati.token, dati.ruolo);
       if (dati.ruolo === "operatore") {
-        navigate("/", { replace: true });
+        navigate("/operatore", { replace: true });
       } else if (dati.ruolo === "supervisore") {
         navigate("/supervisore", { replace: true });
       }

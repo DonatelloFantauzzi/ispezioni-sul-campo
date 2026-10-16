@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import useGetDati from "../hooks/useGetDati.js";
 import {
   classiStileEsito,
   esitoIspezioni,
@@ -8,48 +7,23 @@ import {
   etichettaSeverita,
 } from "../costanti/esiti.js";
 import { Link, useParams } from "react-router";
+import { useState } from "react";
 
 export default function DettaglioIspezione() {
-  const [ispezione, setIspezione] = useState(null);
-  const [caricamento, setCaricamento] = useState(true);
-  const [errore, setErrore] = useState(null);
-  const [nonTrovata, setNonTrovata] = useState(false);
+  const params = useParams();
+  const id = params.id;
+  const { dati, caricamento, errore, stato, getDati, setDati } = useGetDati(
+    `http://localhost:3000/api/ispezioni/${id}`,
+    {
+      ispezione: null,
+    },
+  );
+
+  const nonTrovata = stato === 404 || stato === 400;
+  const { ispezione } = dati;
 
   const [erroreValidazione, setErroreValidazione] = useState(null);
   const [invioInCorso, setInvioInCorso] = useState(false);
-  const params = useParams();
-  const id = params.id;
-
-  const getIspezione = async () => {
-    setIspezione(null);
-    setCaricamento(true);
-    setErrore(null);
-    setNonTrovata(false);
-    try {
-      const token = localStorage.getItem("token");
-      const risposta = await fetch(
-        `http://localhost:3000/api/ispezioni/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      if (!risposta.ok) {
-        if (risposta.status === 404 || risposta.status === 400) {
-          setNonTrovata(true);
-          return;
-        }
-        throw new Error("Errore nel caricamento dell'ispezione");
-      }
-
-      const dati = await risposta.json();
-      setIspezione(dati.ispezione);
-    } catch (error) {
-      console.error(error);
-      setErrore(error.message);
-    } finally {
-      setCaricamento(false);
-    }
-  };
 
   const modificaValidazione = async (validazione) => {
     setInvioInCorso(true);
@@ -70,8 +44,11 @@ export default function DettaglioIspezione() {
       if (!risposta.ok) {
         throw new Error("Errore nella validazione");
       }
-      const dati = await risposta.json();
-      setIspezione({ ...ispezione, validazione: dati.validazione });
+      const risultato = await risposta.json();
+      setDati({
+        ...dati,
+        ispezione: { ...ispezione, validazione: risultato.validazione },
+      });
     } catch (error) {
       console.error(error);
       setErroreValidazione(error.message);
@@ -79,10 +56,6 @@ export default function DettaglioIspezione() {
       setInvioInCorso(false);
     }
   };
-
-  useEffect(() => {
-    getIspezione();
-  }, [id]);
 
   if (caricamento) {
     return (
@@ -138,7 +111,7 @@ export default function DettaglioIspezione() {
           <button
             type="button"
             className="shrink-0 cursor-pointer rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
-            onClick={() => getIspezione()}
+            onClick={() => getDati()}
           >
             Riprova
           </button>

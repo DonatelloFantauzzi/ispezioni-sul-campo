@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
+import useGetDati from "../hooks/useGetDati";
+
 import {
   esitoIspezioni,
   classiStileEsito,
@@ -15,9 +17,12 @@ const filtriIniziali = {
 };
 
 export default function SupervisoreRegistro() {
-  const [ispezioni, setIspezioni] = useState([]);
-  const [errore, setErrore] = useState(null);
-  const [caricamento, setCaricamento] = useState(true);
+  const { dati, caricamento, errore, getDati } = useGetDati(
+    `http://localhost:3000/api/ispezioni`,
+    { ispezioni: [] },
+  );
+
+  const { ispezioni } = dati;
 
   const [filtri, setFiltri] = useState(filtriIniziali);
 
@@ -27,31 +32,6 @@ export default function SupervisoreRegistro() {
     utentiId.add(ispezione.utente_id);
     return true;
   });
-
-  const getIspezioni = async () => {
-    try {
-      setCaricamento(true);
-      setErrore(null);
-      const token = localStorage.getItem("token");
-      const risposta = await fetch(`http://localhost:3000/api/ispezioni`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!risposta.ok) {
-        throw new Error("qualcosa è andato storto durante il caricamento");
-      }
-      const dati = await risposta.json();
-      setIspezioni(dati.ispezioni);
-    } catch (error) {
-      console.error(error);
-      setErrore(error.message);
-    } finally {
-      setCaricamento(false);
-    }
-  };
-
-  useEffect(() => {
-    getIspezioni();
-  }, []);
 
   const ispezioniFiltrate = ispezioni.filter((ispezione) => {
     const quando = new Date(ispezione.data);
@@ -224,7 +204,7 @@ export default function SupervisoreRegistro() {
           </p>
           <button
             onClick={() => {
-              getIspezioni();
+              getDati();
             }}
             type="button"
             className="shrink-0 cursor-pointer rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
