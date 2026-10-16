@@ -1,24 +1,42 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import Operatore from "./pages/Operatore";
 import SupervisoreRegistro from "./pages/SupervisoreRegistro";
 import SupervisoreDaGestire from "./pages/SupervisoreDaGestire";
 import DettaglioIspezione from "./pages/DettaglioIspezione";
 import LayoutSupervisore from "./layouts/LayoutSupervisore";
 import Login from "./pages/Login";
+import RottaProtetta from "./components/RottaProtetta";
+import Smistatore from "./components/Smistatore";
 
 const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
-  { path: "/", element: <Navigate to="/operatore" replace /> },
-  { path: "/operatore", element: <Operatore /> },
   {
-    path: "/supervisore",
-    element: <LayoutSupervisore />,
+    element: <RottaProtetta />,
     children: [
-      { index: true, element: <SupervisoreRegistro /> },
-      { path: "da-gestire", element: <SupervisoreDaGestire /> },
+      { path: "/", element: <Smistatore /> },
+      {
+        element: <RottaProtetta ruoli={["operatore", "admin"]} />,
+        children: [{ path: "/operatore", element: <Operatore /> }],
+      },
+      {
+        element: <RottaProtetta ruoli={["supervisore", "admin"]} />,
+        children: [
+          {
+            path: "/supervisore",
+            element: <LayoutSupervisore />,
+            children: [
+              { index: true, element: <SupervisoreRegistro /> },
+              { path: "da-gestire", element: <SupervisoreDaGestire /> },
+            ],
+          },
+          {
+            path: "/supervisore/ispezioni/:id",
+            element: <DettaglioIspezione />,
+          },
+        ],
+      },
     ],
   },
-  { path: "supervisore/ispezioni/:id", element: <DettaglioIspezione /> },
 ]);
 
 export default function App() {
