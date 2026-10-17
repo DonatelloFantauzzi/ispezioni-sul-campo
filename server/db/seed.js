@@ -72,6 +72,39 @@ const descrizioneDifetti = [
 const difettiLieviMedi = ["lieve", "media"];
 const difettiMediGravi = ["media", "grave"];
 
+const vieNord = [
+  "Via Flaminia",
+  "Viale Parioli",
+  "Via Salaria",
+  "Corso Francia",
+  "Via Nomentana",
+  "Viale Somalia",
+  "Via Cassia",
+  "Viale Libia",
+];
+
+const vieCentro = [
+  "Via del Corso",
+  "Via Nazionale",
+  "Via Cavour",
+  "Via Merulana",
+  "Via Labicana",
+  "Viale Trastevere",
+  "Via Gregorio VII",
+  "Via Prenestina",
+];
+
+const vieSud = [
+  "Via Ostiense",
+  "Via Appia Nuova",
+  "Via Cristoforo Colombo",
+  "Viale Marconi",
+  "Via Laurentina",
+  "Via Tuscolana",
+  "Viale Europa",
+  "Via Portuense",
+];
+
 const seed = async () => {
   await pool.query("TRUNCATE assets,utenti RESTART IDENTITY CASCADE");
   const municipi = (await pool.query("SELECT nome,id FROM zone ORDER BY id"))
@@ -81,17 +114,21 @@ const seed = async () => {
     const lng = Math.random() * 0.2 + 12.4;
     const lat = Math.random() * 0.2 + 41.8;
     let zonaId;
+    let indirizzo;
     if (lat >= 41.8 && lat <= 41.8667) {
       zonaId = municipi[2].id;
+      indirizzo = `${vieSud[Math.floor(Math.random() * vieSud.length)]} ${Math.floor(Math.random() * 200 + 1)}`;
     } else if (lat > 41.8667 && lat <= 41.9333) {
       zonaId = municipi[1].id;
+      indirizzo = `${vieCentro[Math.floor(Math.random() * vieCentro.length)]} ${Math.floor(Math.random() * 200 + 1)}`;
     } else {
       zonaId = municipi[0].id;
+      indirizzo = `${vieNord[Math.floor(Math.random() * vieNord.length)]} ${Math.floor(Math.random() * 200 + 1)}`;
     }
     const nome = `${tipologia}-${i}`;
     await pool.query(
-      `INSERT INTO assets(nome,geom,indirizzo,tipologia,zona_id) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326) , 'Via del corso', $4,$5)`,
-      [nome, lng, lat, tipologia, zonaId],
+      `INSERT INTO assets(nome,geom,indirizzo,tipologia,zona_id) VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3), 4326) , $4, $5,$6)`,
+      [nome, lng, lat, indirizzo, tipologia, zonaId],
     );
   }
 
