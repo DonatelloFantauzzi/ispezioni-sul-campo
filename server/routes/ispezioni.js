@@ -3,6 +3,9 @@ import pool from "../db/pool.js";
 
 const routerIspezioni = express.Router();
 
+const esitiIspezione = ["conforme", "conforme_con_riserva", "non_conforme"];
+const severitaDifetto = ["lieve", "media", "grave"];
+
 routerIspezioni.get("/", async (req, res) => {
   const zona = Number(req.utente.zona);
   try {
@@ -142,6 +145,114 @@ routerIspezioni.patch("/:id", async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ messaggio: "Qualcosa è andato storto" });
+  }
+});
+
+routerIspezioni.post("/", async (req, res) => {
+  const { asset_id, esito, note, difetti, data } = req.body;
+  const utente_id = req.utente.id;
+
+  if (asset_id <= 0 || !Number.isInteger(asset_id)) {
+    return res
+      .status(400)
+      .json({ messaggio: "id dell'asset mancante o non valido" });
+  }
+
+  if (!esitiIspezione.includes(esito)) {
+    return res.status(400).json({ messaggio: "esito non valido" });
+  }
+
+  if (!Array.isArray(difetti)) {
+    return res.status(400).json({ messaggio: "difetti non è un array" });
+  }
+
+  if (esito === "conforme" && difetti.length > 0) {
+    return res
+      .status(400)
+      .json({ messaggio: "non possono esserci difetti se l'esito è conforme" });
+  }
+
+  if (esito !== "conforme" && difetti.length === 0) {
+    return res
+      .status(400)
+      .json({ messaggio: "bisogna inserire almeno un difetto" });
+  }
+
+  const descrizioneDifetto = difetti.every(
+    (difetto) =>
+      typeof difetto.descrizione === "string" && difetto.descrizione.trim(),
+  );
+  const severita = difetti.every((difetto) =>
+    severitaDifetto.includes(difetto.severita),
+  );
+
+  if (!descrizioneDifetto || !severita) {
+    return res.status(400).json({
+      messaggio: "La descrizione è vuota o la severità non è stata inserita",
+    });
+  }
+
+  if (data) {
+    const dataTrasformata = new Date(data);
+    if (Number.isNaN(dataTrasformata.getTime())) {
+      return res.status(400).json({ messaggio: "data non valida" });
+    }
+    if (dataTrasformata.getTime() > Date.now()) {
+      return res
+        .status(400)
+        .json({ messaggio: "la data inserita non può essere futura" });
+    }
+  }
+
+  let noteDaSalvare = null;
+
+  if (note) {
+    if (typeof note !== "string") {
+      return res
+        .status(400)
+        .json({ messaggio: "le note devono essere delle stringhe" });
+    }
+
+    if (note.trim() !== "") {
+      noteDaSalvare = note.trim();
+    }
+  }
+
+  const assetEsistente = await pool.query("SELECT id FROM assets WHERE id=$1", [
+    asset_id,
+  ]);
+
+  if (assetEsistente.rows.length === 0) {
+    return res.status(404).json({ messaggio: "asset non esistente" });
+  }
+
+  const connessione = await pool.connect();
+
+  try {
+    await connessione.query("BEGIN");
+
+    const risultato = await connessione.query(
+      "INSERT INTO ispezioni(asset_id,utente_id,esito,note,data) VALUES($1,$2,$3,$4,COALESCE($5,NOW())) RETURNING id",
+      [asset_id, utente_id, esito, noteDaSalvare, data ?? null],
+    );
+
+    const ispezioneId = risultato.rows[0].id;
+
+    for (const difetto of difetti) {
+      await connessione.query(
+        "INSERT INTO difetti(ispezione_id,descrizione,severita) VALUES($1,$2,$3)",
+        [ispezioneId, difetto.descrizione, difetto.severita],
+      );
+    }
+
+    await connessione.query("COMMIT");
+    res.status(201).json({ id: ispezioneId });
+  } catch (error) {
+    console.error(error);
+    await connessione.query("ROLLBACK");
+    res.status(500).json({ messaggio: "errore nel salvataggio" });
+  } finally {
+    connessione.release();
   }
 });
 
