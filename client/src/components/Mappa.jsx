@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
+import { Link } from "react-router";
 
 const CentraMappa = ({ coordinate }) => {
   const mappa = useMap();
@@ -37,6 +38,13 @@ export default function Mappa({ assets, caricamento, coordinate }) {
                   <div className="text-xs text-slate-500">
                     {asset.indirizzo}
                   </div>
+                  <Link
+                    to={`/operatore/asset/${asset.id}/ispezione`}
+                    state={{ nome: asset.nome, indirizzo: asset.indirizzo }}
+                    className="mt-3 flex min-h-11 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold !text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                  >
+                    Compila ispezione
+                  </Link>
                 </div>
               </Popup>
             </Marker>

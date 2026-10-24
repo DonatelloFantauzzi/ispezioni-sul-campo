@@ -7,6 +7,7 @@ import LayoutSupervisore from "./layouts/LayoutSupervisore";
 import Login from "./pages/Login";
 import RottaProtetta from "./components/RottaProtetta";
 import Smistatore from "./components/Smistatore";
+import NuovaIspezione from "./pages/NuovaIspezione";
 
 const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
@@ -16,7 +17,13 @@ const router = createBrowserRouter([
       { path: "/", element: <Smistatore /> },
       {
         element: <RottaProtetta ruoli={["operatore", "admin"]} />,
-        children: [{ path: "/operatore", element: <Operatore /> }],
+        children: [
+          { path: "/operatore", element: <Operatore /> },
+          {
+            path: "/operatore/asset/:id/ispezione",
+            element: <NuovaIspezione />,
+          },
+        ],
       },
       {
         element: <RottaProtetta ruoli={["supervisore", "admin"]} />,
