@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useGetDati from "../hooks/useGetDati";
 import Mappa from "../components/Mappa";
+import { useLocation } from "react-router";
 
 const posizioneFallback = {
   lat: 41.9,
@@ -16,6 +17,8 @@ const options = {
 
 export default function Operatore() {
   const [coordinate, setCoordinate] = useState(null);
+
+  const { state } = useLocation();
 
   const url = coordinate
     ? `http://localhost:3000/api/assets?lat=${coordinate.lat}&lng=${coordinate.lng}&raggio=10000`
@@ -73,6 +76,21 @@ export default function Operatore() {
           >
             Riprova
           </button>
+        </div>
+      )}
+
+      {state && state.inviata && (
+        <div
+          role="status"
+          className="mx-4 mt-4 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800"
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-6 shrink-0 items-center justify-center rounded-full bg-green-600 text-xs text-white"
+          >
+            ✓
+          </span>
+          Ispezione inviata
         </div>
       )}
 
