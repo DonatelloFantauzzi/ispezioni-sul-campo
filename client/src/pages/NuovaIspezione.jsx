@@ -7,6 +7,7 @@ export default function NuovaIspezione() {
   const [note, setNote] = useState("");
   const [errore, setErrore] = useState(null);
   const [invioInCorso, setInvioInCorso] = useState(false);
+  const [avvisoFoto, setAvvisoFoto] = useState(null);
   const params = useParams();
   const id = params.id;
   const { state } = useLocation();
@@ -24,6 +25,7 @@ export default function NuovaIspezione() {
         id: String(Date.now()),
         severita: "",
         descrizione: "",
+        foto: [],
       },
     ]);
   };
@@ -76,6 +78,55 @@ export default function NuovaIspezione() {
     } finally {
       setInvioInCorso(false);
     }
+  };
+
+  const handleAggiungiFoto = (id, e) => {
+    const arrayFoto = Array.from(e.target.files);
+
+    const difettoConFoto = difetti.find((difetto) => difetto.id === id);
+
+    const postiLiberi = 3 - difettoConFoto.foto.length;
+
+    const fotoDaAggiungere = arrayFoto.slice(0, postiLiberi);
+
+    if (arrayFoto.length > postiLiberi) {
+      setAvvisoFoto(id);
+    }
+
+    const miniatureFoto = fotoDaAggiungere.map((foto, index) => {
+      return {
+        id: `${Date.now()}-${index}`,
+        file: foto,
+        anteprima: URL.createObjectURL(foto),
+      };
+    });
+
+    const difettiAggiornati = difetti.map((difetto) => {
+      if (difetto.id === id) {
+        return { ...difetto, foto: [...difetto.foto, ...miniatureFoto] };
+      }
+      return difetto;
+    });
+
+    setDifetti(difettiAggiornati);
+
+    e.target.value = "";
+  };
+
+  const handleCancellaFoto = (difettoId, foto) => {
+    URL.revokeObjectURL(foto.anteprima);
+    const difettiAggiornati = difetti.map((difetto) => {
+      if (difetto.id === difettoId) {
+        const fotoRimaste = difetto.foto.filter((singolaFoto) => {
+          return singolaFoto.id !== foto.id;
+        });
+        return { ...difetto, foto: fotoRimaste };
+      }
+      return difetto;
+    });
+
+    setDifetti(difettiAggiornati);
+    setAvvisoFoto(null);
   };
 
   const handleSubmit = (e) => {
@@ -294,6 +345,86 @@ export default function NuovaIspezione() {
                             )
                           }
                         />
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="flex items-baseline justify-between">
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                            Foto
+                          </p>
+                          {/* numero di foto di questo difetto + " di 3" */}
+                          <span className="text-xs text-slate-500">
+                            {difetto.foto.length} di 3
+                          </span>
+                        </div>
+
+                        <ul className="mt-2 grid grid-cols-4 gap-2">
+                          {difetto.foto.map((singolaFoto, posizione) => {
+                            return (
+                              <li key={singolaFoto.id} className="relative">
+                                {/* src = anteprima della foto; alt con il numero della foto e del difetto */}
+                                <img
+                                  src={`${singolaFoto.anteprima}`}
+                                  alt={`Foto ${posizione + 1} del difetto ${index + 1}`}
+                                  className="aspect-square w-full rounded-md object-cover ring-1 ring-slate-200"
+                                />
+                                {/* onClick: toglie questa foto; aria-label con gli stessi numeri */}
+                                <button
+                                  type="button"
+                                  aria-label={`Rimuovi foto ${posizione + 1} del difetto ${index + 1}`}
+                                  className="absolute -right-1.5 -top-1.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-sm leading-none text-white ring-2 ring-white hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                                  onClick={() => {
+                                    handleCancellaFoto(difetto.id, singolaFoto);
+                                  }}
+                                >
+                                  <span aria-hidden="true">×</span>
+                                </button>
+                              </li>
+                            );
+                          })}
+
+                          {/* il <li> del bottone: solo se le foto sono meno di 3 */}
+                          {difetto.foto.length < 3 && (
+                            <li>
+                              {/* htmlFor = id dell'input qui sotto, unico per difetto (es. "file-" + id del difetto) */}
+                              <label
+                                htmlFor={`file-${difetto.id}`}
+                                className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-slate-300 text-xs font-medium text-slate-600 hover:border-blue-400 hover:text-blue-700 has-disabled:cursor-not-allowed has-disabled:opacity-50 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  className="text-xl leading-none"
+                                >
+                                  +
+                                </span>
+                                {/* durante la preparazione di questo difetto: "Preparazione…" */}
+                                Foto
+                                {/* id unico per difetto; disabled durante la preparazione; onChange: le foto scelte */}
+                                <input
+                                  id={`file-${difetto.id}`}
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="sr-only"
+                                  onChange={(e) =>
+                                    handleAggiungiFoto(difetto.id, e)
+                                  }
+                                />
+                              </label>
+                            </li>
+                          )}
+                        </ul>
+
+                        {/* solo se l'avviso riguarda questo difetto */}
+                        {avvisoFoto === difetto.id && (
+                          <p
+                            role="status"
+                            className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                          >
+                            Massimo 3 foto per difetto: le altre non sono state
+                            aggiunte.
+                          </p>
+                        )}
                       </div>
                     </li>
                   );
