@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router";
+import ridimensionaFoto from "../utils/ridimensionaFoto";
 
 export default function NuovaIspezione() {
   const [esito, setEsito] = useState("");
@@ -8,6 +9,7 @@ export default function NuovaIspezione() {
   const [errore, setErrore] = useState(null);
   const [invioInCorso, setInvioInCorso] = useState(false);
   const [avvisoFoto, setAvvisoFoto] = useState(null);
+  const [fotoInPreparazione, setFotoInPreparazione] = useState(null);
   const params = useParams();
   const id = params.id;
   const { state } = useLocation();
@@ -56,10 +58,9 @@ export default function NuovaIspezione() {
       const risposta = await fetch(`http://localhost:3000/api/ispezioni`, {
         method: "POST",
         headers: {
-          "Content-type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(ispezione),
+        body: ispezione,
       });
       if (risposta.status === 401) {
         localStorage.removeItem("token");
@@ -80,7 +81,7 @@ export default function NuovaIspezione() {
     }
   };
 
-  const handleAggiungiFoto = (id, e) => {
+  const handleAggiungiFoto = async (id, e) => {
     const arrayFoto = Array.from(e.target.files);
 
     const difettoConFoto = difetti.find((difetto) => difetto.id === id);
@@ -93,22 +94,30 @@ export default function NuovaIspezione() {
       setAvvisoFoto(id);
     }
 
-    const miniatureFoto = fotoDaAggiungere.map((foto, index) => {
-      return {
-        id: `${Date.now()}-${index}`,
-        file: foto,
-        anteprima: URL.createObjectURL(foto),
-      };
-    });
+    const miniatureFoto = [];
 
-    const difettiAggiornati = difetti.map((difetto) => {
-      if (difetto.id === id) {
-        return { ...difetto, foto: [...difetto.foto, ...miniatureFoto] };
-      }
-      return difetto;
-    });
+    setFotoInPreparazione(id);
 
-    setDifetti(difettiAggiornati);
+    for (let i = 0; i < fotoDaAggiungere.length; i++) {
+      const fotoLeggera = await ridimensionaFoto(fotoDaAggiungere[i]);
+
+      miniatureFoto.push({
+        id: `${Date.now()}-${i}`,
+        file: fotoLeggera,
+        anteprima: URL.createObjectURL(fotoLeggera),
+      });
+    }
+
+    setFotoInPreparazione(null);
+
+    setDifetti((difettiAttuali) => {
+      return difettiAttuali.map((difetto) => {
+        if (difetto.id === id) {
+          return { ...difetto, foto: [...difetto.foto, ...miniatureFoto] };
+        }
+        return difetto;
+      });
+    });
 
     e.target.value = "";
   };
@@ -149,7 +158,18 @@ export default function NuovaIspezione() {
       data: data,
     };
 
-    mandaIspezione(ispezione);
+    const pacco = new FormData();
+    pacco.append("ispezione", JSON.stringify(ispezione));
+
+    if (esito !== "conforme") {
+      for (let i = 0; i < difetti.length; i++) {
+        for (const foto of difetti[i].foto) {
+          pacco.append(`foto-${i}`, foto.file, "foto.jpg");
+        }
+      }
+    }
+
+    mandaIspezione(pacco);
   };
 
   return (
@@ -229,7 +249,6 @@ export default function NuovaIspezione() {
               >
                 Difetti
               </h2>
-              {/* numero di difetti */}
               <span className="text-sm text-slate-500">{difetti.length}</span>
             </div>
 
@@ -248,11 +267,9 @@ export default function NuovaIspezione() {
                       className="rounded-lg border border-slate-200 bg-white p-4"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        {/* "Difetto" + numero progressivo (indice + 1) */}
                         <h3 className="text-sm font-semibold text-slate-900">
                           Difetto {index + 1}
                         </h3>
-                        {/* aria-label con lo stesso numero progressivo */}
                         <button
                           type="button"
                           aria-label={`Rimuovi Difetto ${index + 1}`}
@@ -382,11 +399,8 @@ export default function NuovaIspezione() {
                               </li>
                             );
                           })}
-
-                          {/* il <li> del bottone: solo se le foto sono meno di 3 */}
                           {difetto.foto.length < 3 && (
                             <li>
-                              {/* htmlFor = id dell'input qui sotto, unico per difetto (es. "file-" + id del difetto) */}
                               <label
                                 htmlFor={`file-${difetto.id}`}
                                 className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-slate-300 text-xs font-medium text-slate-600 hover:border-blue-400 hover:text-blue-700 has-disabled:cursor-not-allowed has-disabled:opacity-50 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600"
@@ -397,13 +411,14 @@ export default function NuovaIspezione() {
                                 >
                                   +
                                 </span>
-                                {/* durante la preparazione di questo difetto: "Preparazione…" */}
-                                Foto
-                                {/* id unico per difetto; disabled durante la preparazione; onChange: le foto scelte */}
+                                {fotoInPreparazione
+                                  ? "Preparazione..."
+                                  : "Foto"}
                                 <input
                                   id={`file-${difetto.id}`}
                                   type="file"
                                   accept="image/*"
+                                  disabled={fotoInPreparazione}
                                   multiple
                                   className="sr-only"
                                   onChange={(e) =>
