@@ -1,6 +1,6 @@
+import "dotenv/config"; // ← prima di tutto: carica il .env prima che gli altri import leggano process.env
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import pool from "./db/pool.js";
 import routerAssets from "./routes/assets.js";
 import routerIspezioni from "./routes/ispezioni.js";
@@ -8,13 +8,12 @@ import routerLogin from "./routes/login.js";
 import controlloToken from "./middleware/controlloToken.js";
 import multer from "multer";
 
-const PORT = 3000;
-dotenv.config();
+const PORT = process.env.PORT || 3000; // ← su Render la porta la decide il servizio, sul Mac resta 3000
 const app = express();
 
 app.use(express.json());
 
-app.use(cors());
+app.use(cors({ origin: process.env.CLIENT_URL })); // ← dice sì solo al client vero
 
 app.use("/api/login", routerLogin);
 app.use("/api/assets", controlloToken, routerAssets);
