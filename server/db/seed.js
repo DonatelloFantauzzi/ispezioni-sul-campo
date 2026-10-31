@@ -113,7 +113,10 @@ const vieSud = [
 ];
 
 const seed = async () => {
-  await pool.query("TRUNCATE assets,utenti RESTART IDENTITY CASCADE");
+  await pool.query("TRUNCATE zone,assets,utenti RESTART IDENTITY CASCADE");
+  await pool.query(
+    "INSERT INTO zone(nome) VALUES ('Municipio I'),('Municipio II'),('Municipio III')",
+  );
   const municipi = (await pool.query("SELECT nome,id FROM zone ORDER BY id"))
     .rows;
   for (let i = 0; i < 100; i++) {
