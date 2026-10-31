@@ -10,7 +10,7 @@ import { Link } from "react-router";
 
 export default function SupervisoreDaGestire() {
   const { dati, caricamento, errore } = useGetDati(
-    `http://localhost:3000/api/ispezioni/stato-asset`,
+    `${import.meta.env.VITE_API_URL}/api/ispezioni/stato-asset`,
     { statoAsset: [] },
   );
 

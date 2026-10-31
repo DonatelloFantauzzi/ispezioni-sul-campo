@@ -19,12 +19,10 @@ routerAssets.get("/", async (req, res) => {
         .status(400)
         .json({ messaggio: "Longitudine mancante o non valida" });
     }
-    if (!Number.isFinite(raggio) || raggio <= 0 || raggio > 5000) {
-      return res
-        .status(400)
-        .json({
-          messaggio: "Raggio mancante o non valido (massimo 5000 metri)",
-        });
+    if (!Number.isFinite(raggio) || raggio <= 0 || raggio > 20000) {
+      return res.status(400).json({
+        messaggio: "Raggio mancante o non valido (massimo 20000 metri)",
+      });
     }
     const risposta = await pool.query(
       "SELECT id,nome,indirizzo,tipologia, ST_X(geom::geometry) AS lng, ST_Y(geom::geometry) AS lat FROM assets WHERE ST_DWithin(geom, ST_SetSRID(ST_MakePoint($1,$2), 4326)::geography,$3)",

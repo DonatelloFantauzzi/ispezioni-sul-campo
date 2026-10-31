@@ -22,11 +22,14 @@ export default function Login() {
     try {
       setCaricamento(true);
       setErrore(null);
-      const risposta = await fetch(`http://localhost:3000/api/login/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credenziali),
-      });
+      const risposta = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/login/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(credenziali),
+        },
+      );
       const dati = await risposta.json();
       if (!risposta.ok) {
         throw new Error(dati.messaggio);

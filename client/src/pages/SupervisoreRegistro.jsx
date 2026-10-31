@@ -18,7 +18,7 @@ const filtriIniziali = {
 
 export default function SupervisoreRegistro() {
   const { dati, caricamento, errore, getDati } = useGetDati(
-    `http://localhost:3000/api/ispezioni`,
+    `${import.meta.env.VITE_API_URL}/api/ispezioni`,
     { ispezioni: [] },
   );
 

@@ -14,7 +14,7 @@ export default function DettaglioIspezione() {
   const id = params.id;
   const navigate = useNavigate();
   const { dati, caricamento, errore, stato, getDati, setDati } = useGetDati(
-    `http://localhost:3000/api/ispezioni/${id}`,
+    `${import.meta.env.VITE_API_URL}/api/ispezioni/${id}`,
     {
       ispezione: null,
     },
@@ -32,7 +32,7 @@ export default function DettaglioIspezione() {
     try {
       const token = localStorage.getItem("token");
       const risposta = await fetch(
-        `http://localhost:3000/api/ispezioni/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/ispezioni/${id}`,
         {
           method: "PATCH",
           headers: {

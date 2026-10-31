@@ -25,7 +25,7 @@ export default function Operatore() {
   const navigate = useNavigate();
 
   const url = coordinate
-    ? `http://localhost:3000/api/assets?lat=${coordinate.lat}&lng=${coordinate.lng}&raggio=10000`
+    ? `${import.meta.env.VITE_API_URL}/api/assets?lat=${coordinate.lat}&lng=${coordinate.lng}&raggio=10000`
     : null;
 
   const { dati, caricamento, errore, getDati } = useGetDati(url, {

@@ -55,13 +55,16 @@ export default function NuovaIspezione() {
       setInvioInCorso(true);
       setErrore(null);
       const token = localStorage.getItem("token");
-      const risposta = await fetch(`http://localhost:3000/api/ispezioni`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const risposta = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/ispezioni`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: ispezione,
         },
-        body: ispezione,
-      });
+      );
       if (risposta.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("ruolo");
