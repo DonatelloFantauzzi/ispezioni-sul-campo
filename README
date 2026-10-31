@@ -1,0 +1,160 @@
+# Ispezioni sul campo
+
+Piattaforma WebGIS per le ispezioni sul campo di reti tecniche: cabine, tralicci e contatori.
+
+L'**operatore**, dal telefono, vede sulla mappa gli asset intorno a lui, ne sceglie uno e compila il rapporto d'ispezione: esito, difetti con gravità e foto, note. Il **supervisore**, da desktop, ha una dashboard con lo stato degli asset della sua zona e il registro di tutte le ispezioni, che può filtrare, aprire e validare.
+
+**Demo online:** [ispezioni-sul-campo.vercel.app](https://ispezioni-sul-campo.vercel.app)
+
+> Il server è su un piano gratuito che si addormenta dopo 15 minuti senza richieste: il primo accesso può richiedere fino a un minuto. Dopo va veloce.
+
+---
+
+## Provala
+
+| Ruolo       | Email                     | Password           | Cosa vede                                                   |
+| ----------- | ------------------------- | ------------------ | ----------------------------------------------------------- |
+| Operatore   | `mario.rossi@example.com` | `Password123!`     | la mappa con gli asset vicini e il form d'ispezione         |
+| Supervisore | `luca.verdi@example.com`  | `SuperSegreta789!` | la dashboard del Municipio I                                |
+| Admin       | `anna.ferri@example.com`  | `AdminTutto2026!`  | tutto, in tutte le zone, e passa dalla mappa alla dashboard |
+
+Un percorso consigliato:
+
+1. Entra come **operatore**, consenti la posizione (se la neghi, la mappa usa il centro di Roma), apri un asset e invia un'ispezione non conforme con un difetto e una foto.
+2. Esci ed entra come **admin** o come supervisore della zona di quell'asset: l'ispezione è nel Registro, in sospeso. Aprila, guarda la foto e validala.
+
+I dati sono di prova: 100 asset sparsi su tre municipi di Roma e 150 ispezioni negli ultimi sei mesi. Le altre utenze sono in [`server/db/seed.js`](server/db/seed.js).
+
+---
+
+## Funzionalità
+
+**Operatore (mobile)**
+
+- mappa Leaflet centrata sulla posizione GPS, con gli asset entro un raggio dal punto in cui si trova;
+- form d'ispezione con esito (conforme, conforme con riserva, non conforme), difetti con gravità e descrizione, note;
+- fino a 3 foto per difetto, da fotocamera o galleria, con anteprima e rimozione prima dell'invio.
+
+**Supervisore (desktop)**
+
+- **Da gestire**: lo stato attuale di ogni asset della zona, ordinato per urgenza;
+- **Registro**: tutte le ispezioni della zona, filtrabili per operatore, esito, validazione e intervallo di date;
+- **Dettaglio**: difetti e foto di un'ispezione, con Accetta e Rifiuta.
+
+**Admin**
+
+- vede tutte le zone e passa dalla mappa alla dashboard con un link.
+
+---
+
+## Stack
+
+| Parte    | Tecnologie                                                          |
+| -------- | ------------------------------------------------------------------- |
+| Client   | React, Vite, Tailwind CSS v4, React Router, Leaflet / React Leaflet |
+| Server   | Node.js, Express (ESM), Multer, JWT, bcrypt                         |
+| Database | PostgreSQL + PostGIS                                                |
+| Foto     | Cloudinary                                                          |
+| Deploy   | Vercel (client), Render (server), Neon (database)                   |
+
+```
+ Telefono / browser          Vercel            Render                 Neon
+┌──────────────────┐     ┌──────────┐     ┌──────────────┐     ┌────────────────┐
+│ React + Leaflet  │ ──▶ │  client  │ ──▶ │ Express API  │ ──▶ │ Postgres +     │
+│                  │     │ statico  │     │ JWT, ruoli   │     │ PostGIS        │
+└──────────────────┘     └──────────┘     └──────┬───────┘     └────────────────┘
+                                                 │
+                                                 ▼
+                                           ┌────────────┐
+                                           │ Cloudinary │  (foto dei difetti)
+                                           └────────────┘
+```
+
+---
+
+## Scelte tecniche
+
+**Asset vicini con PostGIS.** Le coordinate stanno in una colonna `GEOGRAPHY(POINT, 4326)` con indice GIST. Il client manda latitudine, longitudine e raggio, e il database restituisce solo gli asset entro quel raggio, in metri. La rotta rifiuta con 400 coordinate fuori dai limiti e raggi oltre 20 km.
+
+**Un'ispezione si salva tutta o niente.** Ispezione, difetti e foto vengono scritti in una transazione (`BEGIN` / `COMMIT` / `ROLLBACK`) su una sola connessione del pool. Se un `INSERT` fallisce, non resta un'ispezione a metà.
+
+**Le foto si rimpiccioliscono sul telefono.** Prima dell'invio ogni foto viene ridisegnata su un `OffscreenCanvas`, con il lato lungo a 1600 px, in JPEG all'80%. Una foto da 7,5 MB diventa circa 230 KB, e sul campo, con poca rete, fa la differenza. Ispezione e foto viaggiano in un unico `multipart/form-data`: i dati come JSON, le foto con l'etichetta `foto-N`, dove N è la posizione del difetto a cui appartengono. Il server le legge in memoria con Multer, le controlla (tipo, peso, massimo 3 per difetto), le carica su Cloudinary e salva solo gli URL.
+
+**Autorizzazione sul server, non solo nel client.** Le guardie del client nascondono le pagine, ma ogni rotta controlla da sola chi chiede:
+
+- `401` se il token manca o è scaduto;
+- `403` se il ruolo non è ammesso, con un middleware `soloRuoli([...])`;
+- `404` se un supervisore chiede un'ispezione di un'altra zona. Con un 403 gli confermeremmo che esiste.
+
+**Un filtro di zona che si spegne.** Supervisore e admin usano la stessa query: `($1::bigint IS NULL OR assets.zona_id = $1)`. Per il supervisore `$1` è la sua zona, per l'admin è `null` e il filtro non conta.
+
+**Validazione senza conflitti.** Il controllo "è ancora in sospeso?" sta nel `WHERE` dell'`UPDATE`, non in una `SELECT` fatta prima: se due supervisori cliccano nello stesso momento, ne vince uno solo.
+
+---
+
+## Avviarla in locale
+
+Servono Node.js 20+, PostgreSQL con l'estensione PostGIS e un account Cloudinary gratuito.
+
+```bash
+git clone https://github.com/DonatelloFantauzzi/ispezioni-sul-campo.git
+cd ispezioni-sul-campo
+```
+
+**Database**
+
+1. Crea un database vuoto.
+2. Esegui [`server/db/schema.sql`](server/db/schema.sql). Attiva PostGIS e crea le tabelle.
+
+**Server**
+
+```bash
+cd server
+npm install
+cp .env.example .env    # compila DATABASE_URL, JWT_SECRET e le chiavi Cloudinary
+node db/seed.js         # zone, asset, utenti e ispezioni di prova (svuota le tabelle!)
+node index.js           # http://localhost:3000
+```
+
+**Client**
+
+```bash
+cd client
+npm install
+cp .env.example .env    # VITE_API_URL=http://localhost:3000
+npm run dev             # http://localhost:5173
+```
+
+---
+
+## Struttura
+
+```
+ispezioni-sul-campo/
+├── client/
+│   ├── src/
+│   │   ├── pages/        # Login, Operatore, NuovaIspezione, Registro, Da gestire, Dettaglio
+│   │   ├── layouts/      # LayoutSupervisore (schede della dashboard)
+│   │   ├── components/   # Mappa, RottaProtetta, Smistatore
+│   │   ├── hooks/        # useGetDati
+│   │   ├── costanti/     # etichette e colori di esiti e validazioni
+│   │   └── utils/        # ridimensionaFoto
+│   └── vercel.json       # tutte le URL a index.html, per React Router
+└── server/
+    ├── routes/           # login, assets, ispezioni
+    ├── middleware/       # controlloToken, soloRuoli, upload (Multer)
+    ├── config/           # cloudinary
+    ├── db/               # pool, schema.sql, seed.js
+    └── index.js
+```
+
+---
+
+## Prossimi passi (versione 2)
+
+- **Classificazione dei difetti con Gemini**: la gravità del difetto proposta automaticamente a partire dalla foto.
+- **Offline**: bozza del form salvata sul telefono e coda d'invio con service worker e IndexedDB, che spedisce le ispezioni quando la rete torna.
+
+---
+
+Progetto di [Donatello Fantauzzi](https://github.com/DonatelloFantauzzi).
