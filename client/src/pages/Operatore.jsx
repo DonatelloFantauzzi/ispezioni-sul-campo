@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import useGetDati from "../hooks/useGetDati";
 import Mappa from "../components/Mappa";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 
 const posizioneFallback = {
   lat: 41.9,
@@ -17,6 +17,8 @@ const options = {
 
 export default function Operatore() {
   const [coordinate, setCoordinate] = useState(null);
+
+  const ruolo = localStorage.getItem("ruolo");
 
   const { state } = useLocation();
 
@@ -45,9 +47,21 @@ export default function Operatore() {
   }, []);
   return (
     <>
-      <h1 className="text-3xl font-bold text-blue-600 p-8">
-        Ispezioni sul campo
-      </h1>
+      <header className="flex flex-wrap items-center justify-between gap-3 p-8 pb-4">
+        <h1 className="text-3xl font-bold text-blue-600">
+          Ispezioni sul campo
+        </h1>
+
+        {ruolo === "admin" && (
+          <Link
+            to="/supervisore"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          >
+            Dashboard supervisore
+            <span aria-hidden="true">→</span>
+          </Link>
+        )}
+      </header>
       {coordinate && coordinate.stimata && (
         <div
           role="status"

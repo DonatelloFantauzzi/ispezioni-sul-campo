@@ -1,11 +1,24 @@
-import { NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 
 export default function LayoutSupervisore() {
+  const ruolo = localStorage.getItem("ruolo");
   return (
     <main className="mx-auto max-w-6xl p-8">
-      <h1 className="text-3xl font-bold text-blue-600">
-        Dashboard supervisore
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-blue-600">
+          Dashboard supervisore
+        </h1>
+
+        {ruolo === "admin" && (
+          <Link
+            to="/operatore"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          >
+            <span aria-hidden="true">←</span>
+            Mappa operatore
+          </Link>
+        )}
+      </div>
 
       <nav
         aria-label="Sezioni della dashboard"
