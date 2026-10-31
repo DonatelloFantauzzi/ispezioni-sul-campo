@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import useGetDati from "../hooks/useGetDati";
 import Mappa from "../components/Mappa";
-import { Link, useLocation } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 
 const posizioneFallback = {
   lat: 41.9,
@@ -21,6 +21,8 @@ export default function Operatore() {
   const ruolo = localStorage.getItem("ruolo");
 
   const { state } = useLocation();
+
+  const navigate = useNavigate();
 
   const url = coordinate
     ? `http://localhost:3000/api/assets?lat=${coordinate.lat}&lng=${coordinate.lng}&raggio=10000`
@@ -42,6 +44,12 @@ export default function Operatore() {
     setCoordinate(posizioneFallback);
   };
 
+  const onLogout = () => {
+    localStorage.removeItem("ruolo");
+    localStorage.removeItem("token");
+    navigate("/", { replace: true });
+  };
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successo, fallimento, options);
   }, []);
@@ -52,15 +60,25 @@ export default function Operatore() {
           Ispezioni sul campo
         </h1>
 
-        {ruolo === "admin" && (
-          <Link
-            to="/supervisore"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        <div className="flex items-center gap-3">
+          {ruolo === "admin" && (
+            <Link
+              to="/supervisore"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              Dashboard supervisore
+              <span aria-hidden="true">→</span>
+            </Link>
+          )}
+
+          <button
+            type="button"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            onClick={onLogout}
           >
-            Dashboard supervisore
-            <span aria-hidden="true">→</span>
-          </Link>
-        )}
+            Esci
+          </button>
+        </div>
       </header>
       {coordinate && coordinate.stimata && (
         <div

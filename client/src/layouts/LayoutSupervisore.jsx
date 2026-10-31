@@ -1,7 +1,14 @@
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, useNavigate, Outlet } from "react-router";
 
 export default function LayoutSupervisore() {
   const ruolo = localStorage.getItem("ruolo");
+  const navigate = useNavigate();
+
+  const onLogout = () => {
+    localStorage.removeItem("ruolo");
+    localStorage.removeItem("token");
+    navigate("/", { replace: true });
+  };
   return (
     <main className="mx-auto max-w-6xl p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -9,15 +16,25 @@ export default function LayoutSupervisore() {
           Dashboard supervisore
         </h1>
 
-        {ruolo === "admin" && (
-          <Link
-            to="/operatore"
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        <div className="flex items-center gap-3">
+          {ruolo === "admin" && (
+            <Link
+              to="/operatore"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:border-blue-400 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              <span aria-hidden="true">←</span>
+              Mappa operatore
+            </Link>
+          )}
+
+          <button
+            type="button"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            onClick={onLogout}
           >
-            <span aria-hidden="true">←</span>
-            Mappa operatore
-          </Link>
-        )}
+            Esci
+          </button>
+        </div>
       </div>
 
       <nav

@@ -20,8 +20,8 @@ export default function Mappa({ assets, caricamento, coordinate }) {
     <div className="relative h-[calc(100vh-6rem)] w-full">
       <MapContainer center={[41.9, 12.5]} zoom={12} className="h-full w-full">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
         <CentraMappa coordinate={coordinate} />
         {assets.map((asset) => {

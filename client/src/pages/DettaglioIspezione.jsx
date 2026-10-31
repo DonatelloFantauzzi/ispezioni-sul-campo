@@ -6,12 +6,13 @@ import {
   classiStiliSeverita,
   etichettaSeverita,
 } from "../costanti/esiti.js";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
 import { useState } from "react";
 
 export default function DettaglioIspezione() {
   const params = useParams();
   const id = params.id;
+  const navigate = useNavigate();
   const { dati, caricamento, errore, stato, getDati, setDati } = useGetDati(
     `http://localhost:3000/api/ispezioni/${id}`,
     {
@@ -41,6 +42,12 @@ export default function DettaglioIspezione() {
           body: JSON.stringify({ validazione: `${validazione}` }),
         },
       );
+
+      if (risposta.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("ruolo");
+        return navigate("/login", { replace: true });
+      }
       if (!risposta.ok) {
         throw new Error("Errore nella validazione");
       }
