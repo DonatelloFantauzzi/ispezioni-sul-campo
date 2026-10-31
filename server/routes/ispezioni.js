@@ -21,16 +21,21 @@ const severitaDifetto = ["lieve", "media", "grave"];
 // GET /api/ispezioni → il REGISTRO del supervisore
 // ─────────────────────────────────────────────
 routerIspezioni.get("/", async (req, res) => {
-  // La zona non arriva dalla URL ma dal token: controlloToken l'ha appoggiata su req.utente.
-  // Nel token è una stringa, quindi la trasformiamo in numero.
-  const zona = Number(req.utente.zona);
   try {
+    // La zona non arriva dalla URL ma dal token: controlloToken l'ha appoggiata su req.utente.
+    let zona = null;
+    // Nel token è una stringa, quindi la trasformiamo in numero.
+    const ruolo = req.utente.ruolo;
     // Se la zona manca (0, NaN) o non è un intero, la richiesta non ha senso: 400.
-    if (!zona || !Number.isInteger(zona)) {
-      return res
-        .status(400)
-        .json({ messaggio: "Zona mancante o non corretta" });
+    if (ruolo !== "admin") {
+      zona = Number(req.utente.zona);
+      if (!zona || !Number.isInteger(zona)) {
+        return res
+          .status(400)
+          .json({ messaggio: "Zona mancante o non corretta" });
+      }
     }
+
     // Una query sola con i JOIN: per ogni ispezione prende anche
     // nome, tipologia e indirizzo dell'asset, il nome del municipio e il nome dell'operatore.
     // Gli AS servono perché "nome" esiste in più tabelle: senza alias pg terrebbe solo l'ultimo.
@@ -42,7 +47,7 @@ FROM ispezioni
 JOIN assets ON ispezioni.asset_id=assets.id
 JOIN utenti ON ispezioni.utente_id=utenti.id
 JOIN zone ON assets.zona_id=zone.id
-WHERE assets.zona_id=$1
+WHERE ($1::bigint IS NULL OR assets.zona_id = $1)
 ORDER BY ispezioni.data DESC`,
       [zona],
     );
@@ -65,11 +70,18 @@ ORDER BY ispezioni.data DESC`,
 // ─────────────────────────────────────────────
 routerIspezioni.get("/stato-asset", async (req, res) => {
   // Stessa zona presa dal token, stesso controllo del Registro.
-  const zona = Number(req.utente.zona);
+  let zona = null;
+  const ruolo = req.utente.ruolo;
   try {
-    if (!zona || !Number.isInteger(zona)) {
-      return res.status(400).json({ messaggio: "Zona mancante o non valida" });
+    if (ruolo !== "admin") {
+      zona = Number(req.utente.zona);
+      if (!zona || !Number.isInteger(zona)) {
+        return res
+          .status(400)
+          .json({ messaggio: "Zona mancante o non valida" });
+      }
     }
+
     // Una riga per ogni asset della zona, con la sua ultima ispezione:
     // - parte da assets, non da ispezioni, perché vogliamo TUTTI gli asset;
     // - LEFT JOIN tiene anche gli asset senza ispezioni (i loro campi dell'ispezione saranno null → righe grigie);
@@ -80,7 +92,7 @@ routerIspezioni.get("/stato-asset", async (req, res) => {
       `SELECT DISTINCT ON(assets.id) assets.id AS id_asset, assets.nome, ispezioni.id AS id_ispezione, ispezioni.data,ispezioni.esito
 FROM assets
 LEFT JOIN ispezioni ON assets.id=ispezioni.asset_id
-WHERE assets.zona_id=$1
+WHERE ($1::bigint IS NULL OR assets.zona_id = $1)
 ORDER BY assets.id, ispezioni.data DESC;`,
       [zona],
     );

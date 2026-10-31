@@ -32,11 +32,7 @@ export default function Login() {
         throw new Error(dati.messaggio);
       }
       setLocalStorage(dati.token, dati.ruolo);
-      if (dati.ruolo === "operatore") {
-        navigate("/operatore", { replace: true });
-      } else if (dati.ruolo === "supervisore") {
-        navigate("/supervisore", { replace: true });
-      }
+      navigate("/", { replace: true });
     } catch (error) {
       console.error(error);
       setErrore(error.message);

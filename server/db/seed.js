@@ -45,6 +45,13 @@ const utenti = [
     ruolo: "supervisore",
     idMunicipio: 2,
   },
+  {
+    nome: "Anna Ferri",
+    email: "anna.ferri@example.com",
+    password: "AdminTutto2026!",
+    ruolo: "admin",
+    idMunicipio: null,
+  },
 ];
 
 const esiti = ["conforme", "non_conforme", "conforme_con_riserva"];
@@ -135,7 +142,7 @@ const seed = async () => {
   for (let i = 0; i < utenti.length; i++) {
     const { nome, ruolo, email, password, idMunicipio } = utenti[i];
     const hashata = await bcrypt.hash(password, 10);
-    const zonaId = municipi[idMunicipio].id;
+    const zonaId = idMunicipio === null ? null : municipi[idMunicipio].id;
 
     await pool.query(
       "INSERT INTO utenti(nome,password_hash,ruolo,email,zona_id) VALUES ($1,$2,$3,$4,$5)",

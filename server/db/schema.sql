@@ -12,7 +12,7 @@ CREATE TABLE utenti(
 id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 nome TEXT NOT NULL,
 password_hash TEXT NOT NULL,
-ruolo TEXT NOT NULL CHECK(ruolo IN('operatore','supervisore')),
+ruolo TEXT NOT NULL CHECK(ruolo IN('operatore','supervisore','admin')),
 email TEXT NOT NULL UNIQUE,
 zona_id BIGINT REFERENCES zone(id) ON DELETE SET NULL
 );
