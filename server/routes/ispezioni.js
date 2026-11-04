@@ -421,7 +421,7 @@ routerIspezioni.post(
         return res.status(400).json({ messaggio: "data non valida" });
       }
       // Una data nel futuro non ha senso per un'ispezione già fatta: 400.
-      if (dataTrasformata.getTime() > Date.now()) {
+      if (dataTrasformata.getTime() > Date.now() + 5 * 60 * 1000) {
         return res
           .status(400)
           .json({ messaggio: "la data inserita non può essere futura" });
